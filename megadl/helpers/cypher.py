@@ -230,27 +230,37 @@ class MeganzClient(Client):
 
         return cy_run
 
-    async def cyeor(
-        self, msg: Message | CallbackQuery, text: str, reply: bool = False, **kwargs
-    ):
-        """
-        Edit or Reply to a Message or CallbackQuery
+async def cyeor(
+    self, msg: Message | CallbackQuery, text: str, reply: bool = False, **kwargs
+):
+    """
+    Edit or Reply to a Message or CallbackQuery
 
-        Arguments:
-            msg (Message | CallbackQuery): Message or CallbackQuery to edit or reply to
-            text (str): Text to edit or reply with
-            reply (bool, optional): Whether to reply to the msg or not. Defaults to False.
-        """
+    Arguments:
+        msg (Message | CallbackQuery): Message or CallbackQuery to edit or reply to
+        text (str): Text to edit or reply with
+        reply (bool, optional): Whether to reply to the msg or not. Defaults to False.
+    """
+    try:
         if isinstance(msg, Message):
             if reply:
                 await msg.reply(text)
             else:
                 await msg.edit(text, **kwargs)
-        else:
+        else:  # It's a CallbackQuery
             if reply:
                 await msg.message.reply(text, **kwargs)
             else:
                 await msg.message.edit_text(text, **kwargs)
+    except Exception as e:
+        # Handle MESSAGE_ID_INVALID or other errors
+        print(f"Error editing message: {e}")
+        if isinstance(msg, Message):
+            # Send a new message instead
+            await msg.reply(text)
+        else:  # It's a CallbackQuery
+            await msg.message.reply(text)
+
 
     async def ask(self, chat_id: int, text: str, *args, **kwargs):
         await self.send_message(chat_id, text, *args, **kwargs)
